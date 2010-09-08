@@ -18,27 +18,6 @@ PRIORITIES = (
 
 class MessageManager(models.Manager):
     
-    def high_priority(self):
-        """
-        the high priority messages in the queue
-        """
-        
-        return self.filter(priority="1")
-    
-    def medium_priority(self):
-        """
-        the medium priority messages in the queue
-        """
-        
-        return self.filter(priority="2")
-    
-    def low_priority(self):
-        """
-        the low priority messages in the queue
-        """
-        
-        return self.filter(priority="3")
-    
     def non_deferred(self):
         """
         the messages in the queue not deferred
