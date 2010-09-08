@@ -71,6 +71,10 @@ def send_all():
             try:
                 if connection is None:
                     connection = get_connection(backend=EMAIL_BACKEND)
+                    # In order for Django to reuse the connection, it has to
+                    # already be open() so it sees new_conn_created as False
+                    # and does not try and close the connection anyway.
+                    connection.open()
                 logging.info("sending message '%s' to %s" % (message.subject.encode("utf-8"), u", ".join(message.to_addresses).encode("utf-8")))
                 email = message.email
                 email.connection = connection
