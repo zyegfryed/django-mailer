@@ -93,6 +93,12 @@ def send_all():
                     connection.open()
                 logging.info("sending message '%s' to %s" % (message.subject.encode("utf-8"), u", ".join(message.to_addresses).encode("utf-8")))
                 email = message.email
+                if not email:
+                    # We likely had a decoding problem when pulling it back out
+                    # of the database. We should pass on this one.
+                    mark_as_deferred(message, "message.email was None")
+                    deferred += 1
+                    continue
                 email.connection = connection
                 email.send()
                 mark_as_sent(message)
