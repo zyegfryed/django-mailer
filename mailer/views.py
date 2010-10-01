@@ -10,9 +10,9 @@ from mailer.models import Message, MessageLog
 default_cutoff = timedelta(days=7)
 
 # check one of the permissions dealing with the mailer app
-@permission_required('mailer.add_message')
+@permission_required("mailer.add_message")
 def report(request, cutoff=default_cutoff):
-    priorities = dict(Message._meta.get_field('priority').flatchoices)
+    priorities = dict(Message._meta.get_field("priority").flatchoices)
     pending_messages = list(Message.objects.values("priority").annotate(
             count=Count("priority")).order_by("priority"))
     pending_total = 0
