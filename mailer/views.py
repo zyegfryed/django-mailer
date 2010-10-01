@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from types import StringTypes
 
 from django.contrib.auth.decorators import permission_required
 from django.db.models import Count, Max, Min
@@ -40,6 +41,20 @@ def report(request, cutoff=default_cutoff):
     if len(date_diffs) == 0:
         date_diffs.append(timedelta(seconds=0))
     date_diffs.sort()
+    if len(date_diffs) > 1:
+        total_delay = sum(date_diffs, timedelta(seconds=0))
+        delay_mean = total_delay / (len(date_diffs) - 1)
+    else:
+        delay_mean = timedelta(seconds=0)
+
+    class DelayLookup(object):
+        def __getitem__(self, val):
+            if isinstance(val, StringTypes):
+                val = val.replace("_", ".")
+            rank = float(val) / 100 * len(date_diffs) + 0.5
+            return date_diffs[int(rank)]
+
+    delay_pctiles = DelayLookup()
 
     grouped_errors = log_qs.exclude(result="1").values(
             "result", "log_message").annotate(
@@ -60,8 +75,8 @@ def report(request, cutoff=default_cutoff):
 
         "delay_min": date_diffs[0],
         "delay_max": date_diffs[-1],
-        "delay_mean": sum(date_diffs, timedelta(seconds=0)) / len(date_diffs),
-        "delay_median": date_diffs[len(date_diffs)/2],
+        "delay_mean": delay_mean,
+        "delay_pctiles": delay_pctiles,
 
         "grouped_errors": grouped_errors,
         "most_recent_errors": most_recent_errors,

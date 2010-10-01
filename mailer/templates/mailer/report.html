@@ -84,9 +84,26 @@ otherwise noted.</p>
         <td>{{ delay_mean }}</td>
     </tr>
     <tr>
-        <th>Median sending delay</th>
-        <td>{{ delay_median }}</td>
+        <th>Delay, 50th percentile</th>
+        <td>{{ delay_pctiles.50 }}</td>
     </tr>
+    <tr>
+        <th>Delay, 90th percentile</th>
+        <td>{{ delay_pctiles.90 }}</td>
+    </tr>
+    <tr>
+        <th>Delay, 95th percentile</th>
+        <td>{{ delay_pctiles.95 }}</td>
+    </tr>
+    <tr>
+        <th>Delay, 99th percentile</th>
+        <td>{{ delay_pctiles.99 }}</td>
+    </tr>
+    <tr>
+        <th>Delay, 99.9th percentile</th>
+        <td>{{ delay_pctiles.99_9 }}</td>
+    </tr>
+</table>
 </table>
 
 <h3>Top 20 Errors</h3>
