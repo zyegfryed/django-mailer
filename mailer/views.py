@@ -48,6 +48,14 @@ def report(request, cutoff=default_cutoff):
         delay_mean = timedelta(seconds=0)
 
     class DelayLookup(object):
+        """
+        Perform a percentile-based lookup on our sending delay list. For
+        example, one could obtain the median by calling instance[50]. This
+        class implements __getitem__() so it can be convienently used in a
+        Django template. The dictionary lookup will coerce strings into float
+        values, and will also translate a value like '99_9' into '99.9' so you
+        can perform more precise percentile lookups.
+        """
         def __getitem__(self, val):
             if isinstance(val, StringTypes):
                 val = val.replace("_", ".")
