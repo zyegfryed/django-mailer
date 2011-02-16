@@ -14,6 +14,7 @@ except ImportError:
     # ImportError: cannot import name get_connection
     from django.core.mail import SMTPConnection
     get_connection = lambda backend=None, fail_silently=False, **kwds: SMTPConnection(fail_silently=fail_silently)
+from django.db import transaction
 
 from mailer.models import Message, DontSendEntry, MessageLog
 
@@ -35,17 +36,32 @@ def prioritize():
     """
     
     while True:
-        while Message.objects.high_priority().count() or Message.objects.medium_priority().count():
-            while Message.objects.high_priority().count():
-                for message in Message.objects.high_priority().order_by("when_added"):
-                    yield message
-            while Message.objects.high_priority().count() == 0 and Message.objects.medium_priority().count():
-                yield Message.objects.medium_priority().order_by("when_added")[0]
-        while Message.objects.high_priority().count() == 0 and Message.objects.medium_priority().count() == 0 and Message.objects.low_priority().count():
-            yield Message.objects.low_priority().order_by("when_added")[0]
-        if Message.objects.non_deferred().count() == 0:
+        try:
+            yield Message.objects.non_deferred().order_by(
+                    "priority", "when_added")[0]
+        except IndexError:
+            # the [0] ref was out of range, so we're done with messages
             break
 
+@transaction.commit_on_success
+def mark_as_sent(message):
+    """
+    Mark the given message as sent in the log and delete the original item.
+    """
+
+    MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
+    message.delete()
+
+@transaction.commit_on_success
+def mark_as_deferred(message, err=None):
+    """
+    Mark the given message as deferred in the log and adjust the mail item
+    accordingly.
+    """
+
+    message.defer()
+    logging.info("message deferred due to failure: %s" % err)
+    MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
 
 def send_all():
     """
@@ -77,17 +93,24 @@ def send_all():
             try:
                 if connection is None:
                     connection = get_connection(backend=EMAIL_BACKEND)
+                    # In order for Django to reuse the connection, it has to
+                    # already be open() so it sees new_conn_created as False
+                    # and does not try and close the connection anyway.
+                    connection.open()
                 logging.info("sending message '%s' to %s" % (message.subject.encode("utf-8"), u", ".join(message.to_addresses).encode("utf-8")))
                 email = message.email
+                if not email:
+                    # We likely had a decoding problem when pulling it back out
+                    # of the database. We should pass on this one.
+                    mark_as_deferred(message, "message.email was None")
+                    deferred += 1
+                    continue
                 email.connection = connection
                 email.send()
-                MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
-                message.delete()
+                mark_as_sent(message)
                 sent += 1
             except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError), err:
-                message.defer()
-                logging.info("message deferred due to failure: %s" % err)
-                MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
+                mark_as_deferred(message, err)
                 deferred += 1
                 # Get new connection, it case the connection itself has an error.
                 connection = None

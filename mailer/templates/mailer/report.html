@@ -1,0 +1,152 @@
+{% extends "mailer/base.html" %}
+
+{% block content %}
+<h2>Pending Messages</h2>
+<h3>By Priority</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Priority Name</th>
+            <th>Priority Code</th>
+            <th>Message Count</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in pending_messages %}
+        <tr>
+            <td>{{ row.name }}</td>
+            <td>{{ row.priority }}</td>
+            <td>{{ row.count }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3"><em>No Pending Messages</em></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% if pending_total %}
+<h3>Queue Stats</h3>
+<table>
+    <tr>
+        <th>Total pending</th>
+        <td>{{ pending_total }}</td>
+    </tr>
+    <tr>
+        <th>Earliest pending</th>
+        <td>{{ pending_earliest }}</td>
+    </tr>
+    <tr>
+        <th>Latest pending</th>
+        <td>{{ pending_latest }}</td>
+    </tr>
+    <tr>
+        <th>Current date/time</th>
+        <td>{{ current_time }}</td>
+    </tr>
+</table>
+{% endif %}
+
+<h2>Message Log</h2>
+<p>All values shown are for messages logged in the past {{ cutoff }} unless
+otherwise noted.</p>
+<h3>Log Stats</h3>
+<table>
+    <tr>
+        <th>Total messages processed</th>
+        <td>{{ log_total }}</td>
+    </tr>
+    <tr>
+        <th>Successful messages</th>
+        <td>{{ log_success }}</td>
+    </tr>
+    <tr>
+        <th>Last log entry</th>
+        <td>{{ log_latest }}</td>
+    </tr>
+    <tr>
+        <th>Last success entry</th>
+        <td>{% ifnotequal log_latest log_success_latest %}
+            <strong>{{ log_success_latest }}</strong>
+            {% else %}
+            {{ log_success_latest }}
+            {% endifnotequal %}
+        </td>
+    </tr>
+    <tr>
+        <th>Minimum sending delay</th>
+        <td>{{ delay_min }}</td>
+    </tr>
+    <tr>
+        <th>Maximum sending delay</th>
+        <td>{{ delay_max }}</td>
+    </tr>
+    <tr>
+        <th>Mean sending delay</th>
+        <td>{{ delay_mean }}</td>
+    </tr>
+    <tr>
+        <th>Delay, 50th percentile</th>
+        <td>{{ delay_pctiles.50 }}</td>
+    </tr>
+    <tr>
+        <th>Delay, 90th percentile</th>
+        <td>{{ delay_pctiles.90 }}</td>
+    </tr>
+    <tr>
+        <th>Delay, 95th percentile</th>
+        <td>{{ delay_pctiles.95 }}</td>
+    </tr>
+    <tr>
+        <th>Delay, 99th percentile</th>
+        <td>{{ delay_pctiles.99 }}</td>
+    </tr>
+    <tr>
+        <th>Delay, 99.9th percentile</th>
+        <td>{{ delay_pctiles.99_9 }}</td>
+    </tr>
+</table>
+</table>
+
+<h3>Top 20 Errors</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Count</th>
+            <th>Log Message</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for error in grouped_errors %}
+        <tr>
+            <td>{{ error.count }}</td>
+            <td>{{ error.log_message }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4"><em>No Recent Errors</em></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>Last 10 Errors (all time)</h3>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Date</th>
+            <th>Result</th>
+            <th>Log Message</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for error in most_recent_errors %}
+        <tr>
+            <td>{{ error.id }}</td>
+            <td>{{ error.when_attempted }}</td>
+            <td>{{ error.get_result_display }}</td>
+            <td>{{ error.log_message }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4"><em>No Errors Logged</em></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
