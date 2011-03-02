@@ -109,7 +109,7 @@ def send_all():
                 email.send()
                 mark_as_sent(message)
                 sent += 1
-            except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError), err:
+            except Exception, err:
                 mark_as_deferred(message, err)
                 deferred += 1
                 # Get new connection, it case the connection itself has an error.
