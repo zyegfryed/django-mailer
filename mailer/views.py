@@ -1,10 +1,15 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from types import StringTypes
 
 from django.contrib.auth.decorators import permission_required
 from django.db.models import Count, Max, Min
 from django.shortcuts import render_to_response
 from django.template import RequestContext
+
+try:
+    from django.utils import timezone as datetime
+except ImportError:
+    from datetime import datetime
 
 from mailer.models import Message, MessageLog
 

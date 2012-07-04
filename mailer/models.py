@@ -2,10 +2,13 @@ import base64
 import logging
 import pickle
 
-from datetime import datetime
-
 from django.core.mail import EmailMessage
 from django.db import models
+
+try:
+    from django.utils import timezone as datetime
+except ImportError:
+    from datetime import datetime
 
 
 PRIORITIES = (
