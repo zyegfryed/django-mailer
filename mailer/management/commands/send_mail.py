@@ -12,7 +12,7 @@ PAUSE_SEND = getattr(settings, "MAILER_PAUSE_SEND", False)
 
 class Command(NoArgsCommand):
     help = "Do one pass through the mail queue, attempting to send all mail."
-    
+
     def handle_noargs(self, **options):
         logging.basicConfig(level=logging.DEBUG, format="%(message)s")
         logging.info("-" * 72)
