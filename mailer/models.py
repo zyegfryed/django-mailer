@@ -18,27 +18,6 @@ PRIORITIES = (
 
 class MessageManager(models.Manager):
 
-    def high_priority(self):
-        """
-        the high priority messages in the queue
-        """
-
-        return self.filter(priority="1")
-
-    def medium_priority(self):
-        """
-        the medium priority messages in the queue
-        """
-
-        return self.filter(priority="2")
-
-    def low_priority(self):
-        """
-        the low priority messages in the queue
-        """
-
-        return self.filter(priority="3")
-
     def non_deferred(self):
         """
         the messages in the queue not deferred
@@ -91,6 +70,9 @@ class Message(models.Model):
     # @@@ content_type?
 
     objects = MessageManager()
+
+    ## Suggested index, very useful to the send queue:
+    ## CREATE INDEX mailer_message_send_order ON mailer_message (priority, when_added) WHERE priority < '4';
 
     def defer(self):
         self.priority = "4"
@@ -229,7 +211,7 @@ class MessageLog(models.Model):
     # @@@ campaign?
 
     # additional logging fields
-    when_attempted = models.DateTimeField(default=datetime.now)
+    when_attempted = models.DateTimeField(default=datetime.now, db_index=True)
     result = models.CharField(max_length=1, choices=RESULT_CODES)
     log_message = models.TextField()
 
